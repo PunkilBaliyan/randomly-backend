@@ -1,4 +1,4 @@
-package com.randomly.ws;
+package com.randomly.backend.ws;
 
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
