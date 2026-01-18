@@ -3,6 +3,7 @@ package com.randomly.backend.ws;
 import com.randomly.backend.session.ChatSession;
 import com.randomly.backend.session.SessionRegistry;
 import com.randomly.backend.ws.dto.ChatMessage;
+import com.randomly.backend.ws.dto.TypingEvent;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,4 +57,12 @@ public class ChatController {
                 enriched
         );
     }
+    @MessageMapping("/chat/typing")
+    public void typing(TypingEvent event) {
+        messagingTemplate.convertAndSend(
+                "/topic/session/" + event.sessionId() + "/typing",
+                event
+        );
+    }
+
 }
