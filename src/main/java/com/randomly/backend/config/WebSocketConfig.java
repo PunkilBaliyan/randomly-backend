@@ -11,16 +11,20 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
-    public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry
-                .addEndpoint("/ws")
-                .setAllowedOriginPatterns("*")
-                .withSockJS();
+    public void configureMessageBroker(MessageBrokerRegistry registry) {
+        // server must enable the "/topic" broker so convertAndSend("/topic/...") is delivered
+        registry.enableSimpleBroker("/topic", "/queue");
+        // messages from client should be sent to destinations starting with /app
+        registry.setApplicationDestinationPrefixes("/app");
+        // optional user prefix if you use user destinations
+        registry.setUserDestinationPrefix("/user");
     }
 
     @Override
-    public void configureMessageBroker(MessageBrokerRegistry registry) {
-        registry.enableSimpleBroker("/topic");
-        registry.setApplicationDestinationPrefixes("/app");
+    public void registerStompEndpoints(StompEndpointRegistry registry) {
+        // frontend must connect to the same endpoint (e.g. "/ws")
+        registry.addEndpoint("/ws")
+                .setAllowedOriginPatterns("*")
+                .withSockJS();
     }
 }

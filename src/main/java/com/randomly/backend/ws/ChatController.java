@@ -3,8 +3,9 @@ package com.randomly.backend.ws;
 import com.randomly.backend.session.ChatSession;
 import com.randomly.backend.session.SessionRegistry;
 import com.randomly.backend.ws.dto.ChatMessage;
-import com.randomly.backend.ws.dto.TypingEvent;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
@@ -15,31 +16,33 @@ import java.time.Instant;
 @RequiredArgsConstructor
 public class ChatController {
 
+    private static final Logger log = LoggerFactory.getLogger(ChatController.class);
+
     private final SimpMessagingTemplate messagingTemplate;
     private final SessionRegistry sessionRegistry;
 
     @MessageMapping("/chat/send")
     public void send(ChatMessage message) {
+        log.debug("Received STOMP SEND frame: {}", message);
 
-        // 🔐 Validate session
         ChatSession session = sessionRegistry
                 .get(message.sessionId())
                 .orElse(null);
 
         if (session == null) {
-            return; // invalid / expired session
+            log.warn("Chat session not found for sessionId={}", message.sessionId());
+            return;
         }
 
-        // 🔐 Validate sender is part of session
         boolean authorized =
                 message.fromUserId().equals(session.userA()) ||
                         message.fromUserId().equals(session.userB());
 
         if (!authorized) {
+            log.warn("Unauthorized chat send attempt user={} for session={}", message.fromUserId(), message.sessionId());
             return;
         }
 
-        // ✅ Broadcast message to session topic
         ChatMessage enriched = new ChatMessage(
                 message.sessionId(),
                 message.fromUserId(),
@@ -47,30 +50,10 @@ public class ChatController {
                 Instant.now()
         );
 
+        log.debug("Sending message to topic /topic/session/{} : {}", message.sessionId(), enriched);
         messagingTemplate.convertAndSend(
                 "/topic/session/" + message.sessionId(),
                 enriched
         );
     }
-    @MessageMapping("/chat/typing")
-    public void typing(TypingEvent event) {
-
-        ChatSession session = sessionRegistry
-                .get(event.sessionId())
-                .orElse(null);
-
-        if (session == null) return;
-
-        boolean authorized =
-                event.fromUserId().equals(session.userA()) ||
-                        event.fromUserId().equals(session.userB());
-
-        if (!authorized) return;
-
-        messagingTemplate.convertAndSend(
-                "/topic/session/" + event.sessionId() + "/typing",
-                event
-        );
-    }
-
 }
