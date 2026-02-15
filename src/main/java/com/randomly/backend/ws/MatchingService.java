@@ -1,5 +1,6 @@
 package com.randomly.backend.ws;
 
+import com.randomly.backend.ws.dto.MatchResponse;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -26,14 +27,17 @@ public class MatchingService {
             String otherUser = queue.poll();
             String sessionId = UUID.randomUUID().toString();
 
+// The user who was waiting becomes caller
             messagingTemplate.convertAndSend(
-                    "/queue/match." + userId,
-                    sessionId
+                    "/topic/match/" + otherUser,
+                    new MatchResponse(sessionId, true)
             );
+
             messagingTemplate.convertAndSend(
-                    "/queue/match." + otherUser,
-                    sessionId
+                    "/topic/match/" + userId,
+                    new MatchResponse(sessionId, false)
             );
+            System.out.println("Match created. Caller = " + otherUser);
         } else {
             queue.add(userId);
         }
