@@ -18,25 +18,33 @@ public class RtcController {
     @MessageMapping("/rtc/signal")
     public void signal(RtcSignal signal) {
 
-        // 1️⃣ Validate session exists
+        System.out.println("==================================");
+        System.out.println("RTC SIGNAL RECEIVED:");
+        System.out.println("Type: " + signal.type());
+        System.out.println("From: " + signal.fromUserId());
+        System.out.println("Session: " + signal.sessionId());
+
         ChatSession session = sessionRegistry
                 .get(signal.sessionId())
                 .orElse(null);
 
         if (session == null) {
+            System.out.println("❌ Session not found");
             return;
         }
 
-        // 2️⃣ Validate sender is part of session
         boolean authorized =
                 signal.fromUserId().equals(session.userA()) ||
                         signal.fromUserId().equals(session.userB());
 
         if (!authorized) {
+            System.out.println("❌ Unauthorized sender");
             return;
         }
 
-        // 3️⃣ Relay signal to session RTC topic
+        System.out.println("✅ Broadcasting to /topic/session/" +
+                signal.sessionId() + "/rtc");
+
         messagingTemplate.convertAndSend(
                 "/topic/session/" + signal.sessionId() + "/rtc",
                 signal
