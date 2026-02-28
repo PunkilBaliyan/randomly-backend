@@ -34,7 +34,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                         "http://localhost:4200",     // Local dev
                         "http://localhost:3000",     // Alt dev port
                         "https://randomly-frontend.onrender.com", // Production frontend
-                        "https://randomly-frontend.vercel.app"    // Alternative prod frontend
+                        "https://randomly-frontend-one.vercel.app"    // Alternative prod frontend
                 )
                 .withSockJS()
                 .setInterceptors(new WebSocketInterceptor());
