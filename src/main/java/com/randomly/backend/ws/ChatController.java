@@ -13,6 +13,10 @@ import org.springframework.stereotype.Controller;
 
 import java.time.Instant;
 
+/**
+ * Handles chat messages and typing indicators.
+ * Forwards messages between users in a session.
+ */
 @Controller
 @RequiredArgsConstructor
 public class ChatController {
@@ -24,14 +28,19 @@ public class ChatController {
 
     @MessageMapping("/chat/send")
     public void send(ChatMessage message) {
-        log.debug("Received STOMP SEND frame: {}", message);
+        log.debug("[CHAT] Received message from {} in session {}", message.fromUserId(), message.sessionId());
+
+        if (message.sessionId() == null || message.fromUserId() == null || message.text() == null) {
+            log.warn("[CHAT] Invalid message: missing required fields");
+            return;
+        }
 
         ChatSession session = sessionRegistry
                 .get(message.sessionId())
                 .orElse(null);
 
         if (session == null) {
-            log.warn("Chat session not found for sessionId={}", message.sessionId());
+            log.warn("[CHAT] Session not found for sessionId={}", message.sessionId());
             return;
         }
 
@@ -40,7 +49,7 @@ public class ChatController {
                         message.fromUserId().equals(session.userB());
 
         if (!authorized) {
-            log.warn("Unauthorized chat send attempt user={} for session={}", message.fromUserId(), message.sessionId());
+            log.warn("[CHAT] Unauthorized chat send: user={} for session={}", message.fromUserId(), message.sessionId());
             return;
         }
 
@@ -51,18 +60,26 @@ public class ChatController {
                 Instant.now()
         );
 
-        log.debug("Sending message to topic /topic/session/{} : {}", message.sessionId(), enriched);
+        log.debug("[CHAT] Broadcasting message to /topic/session/{}", message.sessionId());
         messagingTemplate.convertAndSend(
                 "/topic/session/" + message.sessionId(),
                 enriched
         );
     }
+
     @MessageMapping("/chat/typing")
     public void typing(TypingEvent event) {
+        if (event == null || event.sessionId() == null || event.fromUserId() == null) {
+            log.warn("[TYPING] Invalid typing event: missing required fields");
+            return;
+        }
+
+        log.debug("[TYPING] User {} typing={} in session {}", 
+                event.fromUserId(), event.typing(), event.sessionId());
+        
         messagingTemplate.convertAndSend(
                 "/topic/session/" + event.sessionId() + "/typing",
                 event
         );
     }
-
 }
