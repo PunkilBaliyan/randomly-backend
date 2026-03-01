@@ -14,4 +14,7 @@ COPY --from=builder /app/target/*.jar app.jar
 
 EXPOSE 8080
 
-CMD ["java", "-jar", "app.jar"]
+# Set default port to 8080, but allow override via PORT environment variable
+ENV PORT=8080
+
+CMD ["sh", "-c", "java -jar app.jar"]

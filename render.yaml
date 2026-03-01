@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: randomly-backend
+    env: docker
+    plan: free
+    
+    # Port binding
+    ports:
+      - port: 8080
+        protocol: http
+    
+    # Health check configuration
+    healthCheck:
+      path: /health
+      protocol: http
+    
+    # Environment variables
+    envVars:
+      - key: PORT
+        value: 8080
+    
+    # Build settings
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
