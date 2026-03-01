@@ -26,10 +26,11 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
+        // Register WebSocket endpoint without SockJS for now - for debugging
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns("*")
-                .withSockJS()
-                .setInterceptors(new WebSocketInterceptor());
+                .setHandshakeHandler(new org.springframework.web.socket.server.support.DefaultHandshakeHandler())
+                .addInterceptors(new WebSocketInterceptor());
     }
 }
 
