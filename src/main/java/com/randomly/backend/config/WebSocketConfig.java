@@ -27,12 +27,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
-                .setAllowedOrigins(
-                        "http://localhost:4200",     // Local dev
-                        "http://localhost:3000",     // Alt dev port
-                        "https://randomly-frontend.onrender.com", // Production frontend
-                        "https://randomly-frontend-one.vercel.app"    // Alternative prod frontend
-                )
+                .setAllowedOriginPatterns("*")  // Allow all origins for now (debug mode)
                 .withSockJS()
                 .setInterceptors(new WebSocketInterceptor());
     }
