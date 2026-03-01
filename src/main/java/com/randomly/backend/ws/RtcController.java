@@ -25,12 +25,21 @@ public class RtcController {
 
     @MessageMapping("/rtc/signal")
     public void signal(RtcSignal signal) {
+        System.out.println("\n========================================");
+        System.out.println("[RTC-BACKEND] RTC SIGNAL RECEIVED");
+        System.out.println("========================================");
+        System.out.println("[RTC-BACKEND] From User: " + (signal != null ? signal.fromUserId() : "NULL"));
+        System.out.println("[RTC-BACKEND] Session: " + (signal != null ? signal.sessionId() : "NULL"));
+        System.out.println("[RTC-BACKEND] Type: " + (signal != null ? signal.type() : "NULL"));
+        System.out.println("========================================\n");
+
         log.debug("[RTC] Received signal from {}: type={}, session={}", 
                 signal.fromUserId(), signal.type(), signal.sessionId());
 
         if (signal == null || signal.sessionId() == null || 
                 signal.fromUserId() == null || signal.type() == null) {
             log.warn("[RTC] Invalid signal: missing required fields");
+            System.out.println("[RTC-BACKEND] ✗ INVALID SIGNAL - Missing required fields\n");
             return;
         }
 
@@ -40,9 +49,12 @@ public class RtcController {
 
         if (session == null) {
             log.warn("[RTC] Session not found for sessionId={}", signal.sessionId());
+            System.out.println("[RTC-BACKEND] ✗ SESSION NOT FOUND\n");
             return;
         }
 
+        System.out.println("[RTC-BACKEND] ✓ Session found: " + session.userA().substring(0, 8) + " <-> " + session.userB().substring(0, 8));
+        
         boolean authorized =
                 signal.fromUserId().equals(session.userA()) ||
                         signal.fromUserId().equals(session.userB());
@@ -50,8 +62,11 @@ public class RtcController {
         if (!authorized) {
             log.warn("[RTC] Unauthorized RTC signal from user={} for session={}", 
                     signal.fromUserId(), signal.sessionId());
+            System.out.println("[RTC-BACKEND] ✗ UNAUTHORIZED\n");
             return;
         }
+
+        System.out.println("[RTC-BACKEND] ✓ Authorized - Broadcasting " + signal.type());
 
         log.debug("[RTC] Broadcasting {} to /topic/session/{}/rtc", 
                 signal.type(), signal.sessionId());
@@ -60,5 +75,7 @@ public class RtcController {
                 "/topic/session/" + signal.sessionId() + "/rtc",
                 signal
         );
+        
+        System.out.println("[RTC-BACKEND] ✓ " + signal.type() + " BROADCASTED\n");
     }
 }
