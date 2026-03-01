@@ -16,9 +16,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        // Shorter heartbeat to detect disconnections faster (5 seconds)
-        registry.enableSimpleBroker("/topic", "/queue")
-                .setHeartbeatValue(new long[]{5000, 5000});
+        // Enable simple broker for pub/sub messaging
+        // Note: Heartbeat is handled by WebSocket transport layer, not needed here
+        registry.enableSimpleBroker("/topic", "/queue");
         
         registry.setApplicationDestinationPrefixes("/app");
         registry.setUserDestinationPrefix("/user");
